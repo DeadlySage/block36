@@ -26,6 +26,15 @@ const path = require('path');
 app.get('/', (req, res)=> res.sendFile(path.join(__dirname, '../client/dist/index.html')));
 app.use('/assets', express.static(path.join(__dirname, '../client/dist/assets'))); 
 
+// middleware
+const isLoggedIn = async (req, res, next) => {
+  try {
+    req.user = await findUserWithToken(req.headers.authorization);
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
 
 app.post('/api/auth/login', async(req, res, next)=> {
   try {
@@ -36,9 +45,9 @@ app.post('/api/auth/login', async(req, res, next)=> {
   }
 });
 
-app.get('/api/auth/me', async(req, res, next)=> {
+app.get('/api/auth/me', isLoggedIn, async(req, res, next)=> {
   try {
-    res.send(await findUserWithToken(req.headers.authorization));
+    res.send(req.user);
   }
   catch(ex){
     next(ex);
@@ -54,7 +63,7 @@ app.get('/api/users', async(req, res, next)=> {
   }
 });
 
-app.get('/api/users/:id/favorites', async(req, res, next)=> {
+app.get('/api/users/:id/favorites', isLoggedIn,async(req, res, next)=> {
   try {
     res.send(await fetchFavorites(req.params.id));
   }
