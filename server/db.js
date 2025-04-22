@@ -3,6 +3,8 @@ const pg = require('pg');
 const client = new pg.Client(process.env.DATABASE_URL);
 const uuid = require('uuid');
 const bcrypt = require('bcrypt');
+const JWT_SECRET = process.env.JWT_SECRET;
+const jwt = require("jsonwebtoken");
 
 const createTables = async()=> {
   const SQL = `
@@ -61,22 +63,26 @@ const destroyFavorite = async({ user_id, id })=> {
 
 const authenticate = async({ username, password })=> {
   const SQL = `
-    SELECT id, username 
+    SELECT id, password 
     FROM users 
     WHERE username=$1;
   `;
   const response = await client.query(SQL, [username]);
-  if(!response.rows.length ){
+  if(!response.rows.length || (await bcrypt.compare(password, response.rows[0].password)) === false){
     const error = Error('not authorized');
     error.status = 401;
     throw error;
   }
-  return { token: response.rows[0].id };
+  const token = await jwt.sign({ id: response.rows[0].id}, JWT_SECRET);
+  // console.log(token);
+  return { token };
 };
 
 const findUserWithToken = async(id)=> {
   const SQL = `
-    SELECT id, username FROM users WHERE id=$1;
+    SELECT id, username 
+    FROM users 
+    WHERE id=$1;
   `;
   const response = await client.query(SQL, [id]);
   if(!response.rows.length){
