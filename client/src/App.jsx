@@ -35,6 +35,7 @@ function App() {
         }
       });
       const json = await response.json();
+      //console.log('Stored Token:', window.localStorage.getItem('token'));
       if(response.ok){
         setAuth(json);
       }
@@ -56,7 +57,12 @@ function App() {
 
   useEffect(()=> {
     const fetchFavorites = async()=> {
-      const response = await fetch(`/api/users/${auth.id}/favorites`);
+      const token = window.localStorage.getItem('token');
+      const response = await fetch(`/api/users/${auth.id}/favorites`, {
+        headers: {
+          authorization: token
+        }
+      });
       const json = await response.json();
       if(response.ok){
         setFavorites(json);
@@ -90,10 +96,12 @@ function App() {
   };
 
   const addFavorite = async(product_id)=> {
+    const token = window.localStorage.getItem('token');
     const response = await fetch(`/api/users/${auth.id}/favorites`, {
       method: 'POST',
       body: JSON.stringify({ product_id }),
       headers: {
+        authorization: token,
         'Content-Type': 'application/json'
       }
     });
@@ -108,8 +116,12 @@ function App() {
   }
 
   const removeFavorite = async(id)=> {
+    const token = window.localStorage.getItem('token');
     const response = await fetch(`/api/users/${auth.id}/favorites/${id}`, {
       method: 'DELETE',
+      headers: {
+        authorization: token
+      }
     });
 
     if(response.ok){

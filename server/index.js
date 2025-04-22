@@ -77,8 +77,13 @@ app.get('/api/users/:id/favorites', isLoggedIn,async(req, res, next)=> {
   }
 });
 
-app.post('/api/users/:id/favorites', async(req, res, next)=> {
+app.post('/api/users/:id/favorites', isLoggedIn,async(req, res, next)=> {
   try {
+    if(req.params.id !== req.user.id){
+      const error = Error('not authorized');
+      error.status = 401;
+      throw error;
+    }
     res.status(201).send(await createFavorite({ user_id: req.params.id, product_id: req.body.product_id}));
   }
   catch(ex){
@@ -86,8 +91,13 @@ app.post('/api/users/:id/favorites', async(req, res, next)=> {
   }
 });
 
-app.delete('/api/users/:user_id/favorites/:id', async(req, res, next)=> {
+app.delete('/api/users/:user_id/favorites/:id', isLoggedIn,async(req, res, next)=> {
   try {
+    if(req.params.user_id !== req.user.id){
+      const error = Error('not authorized');
+      error.status = 401;
+      throw error;
+    }
     await destroyFavorite({user_id: req.params.user_id, id: req.params.id });
     res.sendStatus(204);
   }
