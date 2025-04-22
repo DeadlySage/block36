@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react'
 
-const Login = ({ login })=> {
+const Login = ({ login, register })=> {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const submit = ev => {
     ev.preventDefault();
-    login({ username, password });
+    if(isRegistering) {
+      register({ username, password });
+    } else {
+      login({ username, password });
+    }
   }
   return (
     <form onSubmit={ submit }>
       <input value={ username } placeholder='username' onChange={ ev=> setUsername(ev.target.value)}/>
       <input value={ password} placeholder='password' onChange={ ev=> setPassword(ev.target.value)}/>
-      <button disabled={ !username || !password }>Login</button>
+      <button disabled={ !username || !password }>{isRegistering ? 'Register' : 'Login'}</button>
+      <p onClick={() => setIsRegistering(!isRegistering)}>
+        {isRegistering ? 'Already have an account? Log in' : 'Need an account? Register'}
+      </p>
     </form>
   );
 }
@@ -92,8 +100,26 @@ function App() {
     }
     else {
       console.log(json);
+      alert("wrong credentials");
     }
   };
+
+  const register = async(credentials) => {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const json = await response.json();
+    if(response.ok){
+      alert("succesfull registration");
+    } else {
+      alert("failed registration");
+    }
+  }
 
   const addFavorite = async(product_id)=> {
     const token = window.localStorage.getItem('token');
@@ -140,7 +166,7 @@ function App() {
   return (
     <>
       {
-        !auth.id ? <Login login={ login }/> : <button onClick={ logout }>Logout { auth.username }</button>
+        !auth.id ? <Login login={ login } register={ register }/> : <button onClick={ logout }>Logout { auth.username }</button>
       }
       <ul>
         {
