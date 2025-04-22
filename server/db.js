@@ -78,7 +78,18 @@ const authenticate = async({ username, password })=> {
   return { token };
 };
 
-const findUserWithToken = async(id)=> {
+// modify this function to accept a token instead of a an id
+const findUserWithToken = async(token)=> {
+  let id;
+  try {
+    const payload = await jwt.verify(token.slice(7), JWT_SECRET);
+    id = payload.id;
+  } catch (ex) {
+    const error = Error('not authorized');
+    error.status = 401;
+    throw error;
+  }
+  
   const SQL = `
     SELECT id, username 
     FROM users 
